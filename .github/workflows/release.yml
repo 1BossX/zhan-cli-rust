@@ -51,6 +51,7 @@ jobs:
         with:
           files: |
             ${{ matrix.target == 'x86_64-pc-windows-gnu' && 'zhan-*.zip' || 'zhan-*.tar.gz' }}
+            ${{ matrix.target == 'x86_64-unknown-linux-gnu' && 'install.sh' }}
           draft: false
           prerelease: ${{ contains(github.ref_name, '-alpha') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-rc') }}
         env:
