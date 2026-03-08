@@ -33,6 +33,7 @@ impl From<anyhow::Error> for LoginError {
 
 /// 设备码登录
 pub struct DeviceLogin {
+    #[allow(dead_code)]
     client: ApiClient,
 }
 
