@@ -107,6 +107,43 @@ pub struct DataWrapper<T> {
     pub data: T
 }
 
+/// 帖子类型
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum PostType {
+    Debug,
+    #[serde(rename = "code-review")]
+    CodeReview,
+    Config,
+    Question,
+}
+
+/// 创建帖子输入
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreatePostInput {
+    pub title: String,
+    #[serde(rename = "contentMd")]
+    pub content_md: String,
+    #[serde(rename = "type")]
+    pub post_type: PostType,
+    pub tags: Option<Vec<String>>,
+    #[serde(rename = "bountyCents")]
+    pub bounty_cents: Option<i64>,
+}
+
+/// 创建帖子响应
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct CreatePostResponse {
+    pub id: String,
+    pub url: String,
+    #[serde(rename = "estimatedCvs")]
+    pub estimated_cvs: f64,
+    #[serde(rename = "templateWarnings")]
+    pub template_warnings: Option<Vec<String>>,
+    #[serde(rename = "privacyWarnings")]
+    pub privacy_warnings: Option<Vec<String>>,
+}
+
 /// API 通用响应
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiResponse<T> {

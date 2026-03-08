@@ -167,6 +167,12 @@ impl ApiClient {
         let response: DataWrapper<Post> = self.get(&path).await?;
         Ok(response.data)
     }
+
+    /// 创建帖子
+    pub async fn create_post(&self, input: &CreatePostInput) -> Result<CreatePostResponse, ApiError> {
+        let response: CreatePostResponse = self.post("/posts", input).await?;
+        Ok(response)
+    }
 }
 
 impl Default for ApiClient {

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use owo_colors::OwoColorize;
-use zhan_sdk::{ApiClient, Config, DeviceLogin};
+use zhan_sdk::{ApiClient, Config, CreatePostInput, DeviceLogin, PostType};
 
 #[derive(Parser)]
 #[command(name = "zhan")]
@@ -43,6 +43,22 @@ enum Commands {
     View {
         /// 帖子 ID
         post_id: String,
+    },
+    /// 发布新帖子
+    Post {
+        /// 帖子标题
+        title: String,
+        /// 帖子内容 (Markdown)
+        content: String,
+        /// 帖子类型: debug, code-review, config, question
+        #[arg(long, default_value = "question")]
+        r#type: String,
+        /// 标签 (逗号分隔)
+        #[arg(long)]
+        tags: Option<String>,
+        /// 悬赏金额 (分)
+        #[arg(long)]
+        bounty: Option<i64>,
     },
     /// 显示配置文件路径
     ConfigPath,
@@ -332,6 +348,79 @@ async fn main() -> Result<()> {
                 }
                 Err(e) => {
                     println!("{} {}", "✗".red(), e);
+                }
+            }
+        }
+        Commands::Post { title, content, r#type, tags, bounty } => {
+            println!("{}", "发布帖子...".bold());
+            
+            // 检查登录
+            let config = match Config::load() {
+                Ok(c) => c,
+                Err(_) => {
+                    println!("{}", "✗ 请先登录".red());
+                    return Ok(());
+                }
+            };
+            
+            if !config.is_logged_in() {
+                println!("{}", "✗ 请先运行 `zhan login` 登录".red());
+                return Ok(());
+            }
+            
+            // 解析类型
+            let post_type = match r#type.as_str() {
+                "debug" => PostType::Debug,
+                "code-review" | "codereview" | "code_review" => PostType::CodeReview,
+                "config" => PostType::Config,
+                "question" | "q" => PostType::Question,
+                _ => {
+                    println!("{} {}", "✗ 无效类型:".red(), r#type);
+                    println!("有效类型: debug, code-review, config, question");
+                    return Ok(());
+                }
+            };
+            
+            // 解析标签
+            let tags_vec = tags.map(|t| {
+                t.split(',')
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty())
+                    .collect()
+            });
+            
+            let input = CreatePostInput {
+                title,
+                content_md: content,
+                post_type,
+                tags: tags_vec,
+                bounty_cents: bounty,
+            };
+            
+            let client = match ApiClient::new() {
+                Ok(c) => c,
+                Err(e) => {
+                    println!("{} {}", "✗ 创建客户端失败:".red(), e);
+                    return Ok(());
+                }
+            };
+            
+            match client.create_post(&input).await {
+                Ok(result) => {
+                    println!("{}", "✓ 帖子发布成功！".green());
+                    println!("  ID: {}", result.id);
+                    println!("  URL: {}", result.url);
+                    if let Some(warnings) = &result.template_warnings {
+                        if !warnings.is_empty() {
+                            println!("\n⚠️  模板建议:");
+                            for w in warnings {
+                                println!("  - {}", w);
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    println!("{} {}", "✗ 发布失败:".red(), e);
                 }
             }
         }
