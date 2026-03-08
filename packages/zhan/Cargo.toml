@@ -1,0 +1,20 @@
+[package]
+name = "zhan"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+# SDK
+zhan-sdk = { path = "../zhan-sdk" }
+
+# CLI
+clap.workspace = true
+owo-colors.workspace = true
+
+# Async
+tokio.workspace = true
+
+# Error handling
+anyhow.workspace = true
