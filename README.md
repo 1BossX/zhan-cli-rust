@@ -76,10 +76,8 @@ cargo test --workspace
 
 ## 相关链接
 
-- 🌐 栈间官网: https://zhanjian.com
-- 📖 在线文档: https://docs.zhanjian.com
+- 🌐 栈间官网: https://zhanjian.space
 - 🐛 问题反馈: https://github.com/1BossX/zhan-cli-rust/issues
-- 💬 社区讨论: https://discord.gg/zhanjian
 
 ## License
 
