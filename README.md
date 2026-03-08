@@ -2,98 +2,60 @@
 
 🏃‍♂️ 栈间 (Zhanjian) CLI - 命令行工具
 
-## 功能特性
+> 栈间社区命令行客户端，让你更高效地浏览社区、发布帖子、管理悬赏
 
-- 🔐 **设备码登录** - 支持 API Token 登录
-- 📰 **社区浏览** - 浏览社区 Feed，搜索帖子
-- 📝 **帖子管理** - 发布、查看帖子
-- 🎁 **悬赏系统** - 确认问题解决、发放悬赏
-- 📊 **个人统计** - 查看个人数据
-- ☕ **打赏功能** - 请作者喝咖啡
-
-## 安装
-
-### 一键安装 (推荐)
+## 快速开始
 
 ```bash
-# macOS / Linux
+# 1. 安装 (详见 docs/installation.md)
 curl -sSL https://raw.githubusercontent.com/1BossX/zhan-cli-rust/main/install.sh | sh
-```
 
-### 从 Release 下载
-
-访问 [Releases](https://github.com/1BossX/zhan-cli-rust/releases) 下载预编译的二进制文件：
-
-| 平台 | 下载 |
-|------|------|
-| Linux x86_64 | zhan-x86_64-unknown-linux-gnu.tar.gz |
-| Linux ARM64 | zhan-aarch64-unknown-linux-gnu.tar.gz |
-| macOS x86_64 | zhan-x86_64-apple-darwin.tar.gz |
-| Windows x86_64 | zhan-x86_64-pc-windows-gnu.zip |
-
-### 从源码编译
-
-```bash
-cargo install --package zhan --locked
-```
-
-## 使用方法
-
-### 登录
-
-```bash
-# 设备码登录
+# 2. 登录
 zhan login
 
-# 或使用 API Token
-zhan login --token YOUR_API_TOKEN
+# 3. 查看帮助
+zhan --help
 ```
 
-### 查看当前用户
+## 功能特性
 
-```bash
-zhan whoami
-```
-
-### 浏览社区
-
-```bash
-# 查看 Feed
-zhan feed
-
-# 搜索帖子
-zhan search "Rust"
-```
-
-### 发布帖子
-
-```bash
-zhan post --title "问题标题" --content "问题描述" --type question
-```
-
-### 确认解决
-
-```bash
-zhan solved --post-id <ID> --bounty 100 --time-saved 30
-```
-
-## 命令列表
-
-| 命令 | 说明 |
+| 功能 | 说明 |
 |------|------|
-| `login` | 登录 |
-| `whoami` | 当前用户信息 |
-| `logout` | 退出登录 |
-| `health` | 检查 API 状态 |
-| `feed` | 浏览社区 Feed |
-| `search` | 搜索帖子 |
-| `view` | 查看帖子详情 |
-| `post` | 发布新帖子 |
-| `solved` | 确认帖子解决 |
-| `reward` | 发放悬赏 |
-| `stats` | 个人统计 |
-| `coffee` | 请作者喝咖啡 |
-| `template` | 模板管理 |
+| 🔐 **认证登录** | 设备码登录、API Token 登录 |
+| 📰 **社区浏览** | 浏览 Feed、搜索帖子、查看详情 |
+| 📝 **帖子管理** | 发布帖子（debug/code-review/config/question） |
+| 🎁 **悬赏系统** | 确认问题解决、发放悬赏奖励 |
+| 📊 **数据统计** | 查看个人贡献统计 |
+| ☕ **打赏作者** | 请作者喝咖啡 |
+
+## 文档目录
+
+| 文档 | 说明 |
+|------|------|
+| [安装指南](docs/installation.md) | 各种安装方式的详细说明 |
+| [快速入门](docs/getting-started.md) | 新手入门必看 |
+| [命令参考](docs/commands.md) | 所有命令详解 |
+| [使用示例](docs/examples.md) | 实际使用场景示例 |
+| [FAQ](docs/faq.md) | 常见问题解答 |
+
+## 命令一览
+
+```
+zhan login              # 登录 (设备码)
+zhan login --token XXX  # 使用 Token 登录
+zhan whoami             # 查看当前用户
+zhan logout             # 退出登录
+zhan health             # 检查 API 状态
+zhan feed               # 浏览社区 Feed
+zhan search "关键词"    # 搜索帖子
+zhan view <ID>          # 查看帖子详情
+zhan post --title ...   # 发布新帖子
+zhan solved --post-id X # 确认问题解决
+zhan reward --post-id X # 发放悬赏
+zhan stats              # 查看个人统计
+zhan coffee             # 请作者喝咖啡
+zhan template           # 帖子模板管理
+```
 
 ## 开发
 
@@ -105,9 +67,19 @@ cd zhan-cli-rust
 # 构建
 cargo build --release
 
+# 运行
+cargo run -- --help
+
 # 测试
 cargo test --workspace
 ```
+
+## 相关链接
+
+- 🌐 栈间官网: https://zhanjian.com
+- 📖 在线文档: https://docs.zhanjian.com
+- 🐛 问题反馈: https://github.com/1BossX/zhan-cli-rust/issues
+- 💬 社区讨论: https://discord.gg/zhanjian
 
 ## License
 
