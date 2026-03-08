@@ -84,7 +84,7 @@ impl DeviceLogin {
             verification_uri,
             verification_uri_complete,
             expires_in,
-            interval: interval,
+            interval,
         })
     }
 
@@ -121,7 +121,8 @@ impl DeviceLogin {
 
                     // 获取用户信息 (从 user 字段或 API)
                     let username = if let Some(user_obj) = response["user"].as_object() {
-                        user_obj.get("username")
+                        user_obj
+                            .get("username")
                             .and_then(|u| u.as_str())
                             .unwrap_or("unknown")
                             .to_string()

@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use confy::ConfyError;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;

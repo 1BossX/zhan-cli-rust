@@ -31,9 +31,7 @@ impl ApiClient {
     pub fn new() -> Result<Self> {
         let config = Config::load().context("加载配置失败")?;
         Ok(Self {
-            client: Client::builder()
-                .timeout(Duration::from_secs(30))
-                .build()?,
+            client: Client::builder().timeout(Duration::from_secs(30)).build()?,
             base_url: config.api_url,
             token: config.token,
         })
@@ -60,7 +58,7 @@ impl ApiClient {
     /// 发送 GET 请求
     pub async fn get<T: DeserializeOwned>(&self, path: &str) -> Result<T, ApiError> {
         let url = format!("{}{}", self.base_url, path);
-        
+
         let mut request = self.client.get(&url);
 
         if let Some(token) = &self.token {
@@ -80,13 +78,13 @@ impl ApiClient {
 
         // 先获取文本，再解析
         let text = response.text().await?;
-        
+
         // 尝试解析
         match serde_json::from_str::<T>(&text) {
             Ok(data) => Ok(data),
             Err(e) => {
                 // 返回解析错误
-                return Err(ApiError::ApiError(format!("JSON 解析错误: {}", e)));
+                Err(ApiError::ApiError(format!("JSON 解析错误: {}", e)))
             }
         }
     }
@@ -131,7 +129,11 @@ impl ApiClient {
     }
 
     /// 获取 Feed
-    pub async fn get_feed(&self, r#type: Option<&str>, limit: Option<u32>) -> Result<Vec<Post>, ApiError> {
+    pub async fn get_feed(
+        &self,
+        r#type: Option<&str>,
+        limit: Option<u32>,
+    ) -> Result<Vec<Post>, ApiError> {
         let mut path = String::from("/feed?");
         if let Some(t) = r#type {
             path.push_str(&format!("type={}&", t));
@@ -139,13 +141,19 @@ impl ApiClient {
         if let Some(l) = limit {
             path.push_str(&format!("limit={}", l));
         }
-        
+
         let response: DataWrapper<FeedResponse> = self.get(&path).await?;
         Ok(response.data.posts)
     }
 
     /// 搜索帖子
-    pub async fn search(&self, query: &str, r#type: Option<&str>, since: Option<u32>, limit: Option<u32>) -> Result<SearchResult, ApiError> {
+    pub async fn search(
+        &self,
+        query: &str,
+        r#type: Option<&str>,
+        since: Option<u32>,
+        limit: Option<u32>,
+    ) -> Result<SearchResult, ApiError> {
         let mut path = format!("/search?q={}", query);
         if let Some(t) = r#type {
             path.push_str(&format!("&type={}", t));
@@ -156,7 +164,7 @@ impl ApiClient {
         if let Some(l) = limit {
             path.push_str(&format!("&limit={}", l));
         }
-        
+
         let response: DataWrapper<SearchResult> = self.get(&path).await?;
         Ok(response.data)
     }
@@ -169,7 +177,10 @@ impl ApiClient {
     }
 
     /// 创建帖子
-    pub async fn create_post(&self, input: &CreatePostInput) -> Result<CreatePostResponse, ApiError> {
+    pub async fn create_post(
+        &self,
+        input: &CreatePostInput,
+    ) -> Result<CreatePostResponse, ApiError> {
         let response: CreatePostResponse = self.post("/posts", input).await?;
         Ok(response)
     }
@@ -181,21 +192,33 @@ impl ApiClient {
     }
 
     /// 确认帖子解决
-    pub async fn solved(&self, post_id: &str, input: &SolvedInput) -> Result<SolvedResponse, ApiError> {
+    pub async fn solved(
+        &self,
+        post_id: &str,
+        input: &SolvedInput,
+    ) -> Result<SolvedResponse, ApiError> {
         let path = format!("/posts/{}/solved", post_id);
         let response: SolvedResponse = self.post(&path, input).await?;
         Ok(response)
     }
 
     /// 发放悬赏
-    pub async fn reward(&self, post_id: &str, input: &RewardInput) -> Result<serde_json::Value, ApiError> {
+    pub async fn reward(
+        &self,
+        post_id: &str,
+        input: &RewardInput,
+    ) -> Result<serde_json::Value, ApiError> {
         let path = format!("/posts/{}/reward", post_id);
         let response: serde_json::Value = self.post(&path, input).await?;
         Ok(response)
     }
 
     /// 请作者喝咖啡
-    pub async fn coffee(&self, post_id: &str, amount: Option<i64>) -> Result<CoffeeResponse, ApiError> {
+    pub async fn coffee(
+        &self,
+        post_id: &str,
+        amount: Option<i64>,
+    ) -> Result<CoffeeResponse, ApiError> {
         let input = CoffeeInput {
             post_id: post_id.to_string(),
             amount_cents: amount,

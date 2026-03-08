@@ -43,7 +43,7 @@ pub struct DevicePollError {
 /// 用户信息
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
-    pub id: Option<String>,  // API 有时没有 id
+    pub id: Option<String>, // API 有时没有 id
     pub username: String,
     pub email: Option<String>,
     #[serde(rename = "avatarUrl")]
@@ -104,7 +104,7 @@ pub struct FeedResponse {
 /// API 响应包装（部分 API 使用）
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct DataWrapper<T> {
-    pub data: T
+    pub data: T,
 }
 
 /// 帖子类型
