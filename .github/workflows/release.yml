@@ -2,28 +2,42 @@ name: Release
 
 on:
   release:
-    types: [created]
+    types: [published]
+
+env:
+  CARGO_TERM_COLOR: always
 
 permissions:
   contents: write
 
 jobs:
-  # 构建并发布二进制文件
-  build-release:
-    name: Build ${{ matrix.target }}
+  # 构建检查
+  check:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build
+        run: cargo build --verbose
+      - name: Run tests
+        run: cargo test --verbose
+
+  # 多平台构建矩阵
+  build-matrix:
     strategy:
       matrix:
         include:
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-          - target: x86_64-pc-windows-gnu
-            os: windows-latest
-          - target: aarch64-unknown-linux-gnu
-            os: ubuntu-latest
-          - target: x86_64-apple-darwin
-            os: macos-latest
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            ext: tar.gz
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            ext: tar.gz
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            ext: tar.gz
 
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -32,45 +46,55 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Build release
-        run: |
-          cargo build --release --package zhan
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Package binary (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: |
-          tar -czvf zhan-${{ matrix.target }}.tar.gz -C target/release zhan
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: zhan-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/zhan
 
-      - name: Package binary (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          Compress-Archive -Path target/release/zhan.exe -DestinationPath zhan-${{ matrix.target }}.zip
+  # 打包并发布
+  release:
+    needs: [check, build-matrix]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Upload Release Asset
-        uses: softprops/action-gh-release@v2
+      - name: Download all binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: ./binaries
+
+      - name: Package binaries
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          mkdir -p ./packages
+
+          for target in x86_64-apple-darwin x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu; do
+            if [ -f "./binaries/zhan-${target}/zhan" ]; then
+              chmod +x "./binaries/zhan-${target}/zhan"
+              tar -czf "./packages/zhan-${VERSION}-${target}.tar.gz" -C "./binaries/zhan-${target}" zhan
+              echo "Packaged: zhan-${VERSION}-${target}.tar.gz"
+            fi
+          done
+
+      - name: Generate checksums
+        run: |
+          cd ./packages
+          sha256sum *.tar.gz > checksums.txt
+          cat checksums.txt
+
+      - name: Upload install.sh to release
+        run: |
+          cp install.sh ./packages/
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
         with:
           files: |
-            ${{ matrix.target == 'x86_64-pc-windows-gnu' && 'zhan-*.zip' || 'zhan-*.tar.gz' }}
-            ${{ matrix.target == 'x86_64-unknown-linux-gnu' && 'install.sh' }}
-          draft: false
-          prerelease: ${{ contains(github.ref_name, '-alpha') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-rc') }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # 构建并发布 Homebrew formula (暂时禁用)
-  # homebrew:
-  #   name: Homebrew Tap
-  #   runs-on: ubuntu-latest
-  #   needs: build-release
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         repository: 1BossX/homebrew-tap
-  #         sparse-checkout: |
-  #            Formula/zhan-cli.rb
-  #         sparse-checkout-cone-mode: false
-  #         token: ${{ secrets.HOMEBREW_TOKEN }}
-  #
-  #     - name: Update Homebrew formula
-  #       run: |
-  #         echo "需要手动更新 Homebrew formula"
+            ./packages/*.tar.gz
+            ./packages/checksums.txt
+            ./packages/install.sh
+          token: ${{ secrets.GITHUB_TOKEN }}
