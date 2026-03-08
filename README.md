@@ -13,10 +13,11 @@
 
 ## 安装
 
-### 从源码编译
+### 一键安装 (推荐)
 
 ```bash
-cargo install --package zhan --locked
+# macOS / Linux
+curl -sSL https://raw.githubusercontent.com/1BossX/zhan-cli-rust/main/install.sh | sh
 ```
 
 ### 从 Release 下载
@@ -26,8 +27,15 @@ cargo install --package zhan --locked
 | 平台 | 下载 |
 |------|------|
 | Linux x86_64 | zhan-x86_64-unknown-linux-gnu.tar.gz |
+| Linux ARM64 | zhan-aarch64-unknown-linux-gnu.tar.gz |
 | macOS x86_64 | zhan-x86_64-apple-darwin.tar.gz |
 | Windows x86_64 | zhan-x86_64-pc-windows-gnu.zip |
+
+### 从源码编译
+
+```bash
+cargo install --package zhan --locked
+```
 
 ## 使用方法
 
