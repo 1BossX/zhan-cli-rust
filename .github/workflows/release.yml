@@ -33,9 +33,6 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             ext: tar.gz
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            ext: tar.gz
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -72,7 +69,7 @@ jobs:
           VERSION="${{ github.event.release.tag_name }}"
           mkdir -p ./packages
 
-          for target in x86_64-apple-darwin x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu; do
+          for target in x86_64-apple-darwin x86_64-unknown-linux-gnu; do
             if [ -f "./binaries/zhan-${target}/zhan" ]; then
               chmod +x "./binaries/zhan-${target}/zhan"
               tar -czf "./packages/zhan-${VERSION}-${target}.tar.gz" -C "./binaries/zhan-${target}" zhan
