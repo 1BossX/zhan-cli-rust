@@ -89,6 +89,13 @@ enum Commands {
         /// 金额 (分)
         amount: Option<i64>,
     },
+    /// 模板管理
+    Template {
+        /// 操作: list 或 show
+        action: String,
+        /// 模板类型 (show 时使用)
+        template_type: Option<String>,
+    },
     /// 显示配置文件路径
     ConfigPath,
     /// 查看配置
@@ -605,6 +612,103 @@ async fn main() -> Result<()> {
                 }
                 Err(e) => {
                     println!("{} {}", "✗ 创建支付会话失败:".red(), e);
+                }
+            }
+        }
+        Commands::Template { action, template_type } => {
+            match action.as_str() {
+                "list" | "ls" => {
+                    println!("\n{}", "可用模板:".bold());
+                    println!();
+                    println!("{}", "  debug".cyan());
+                    println!("    记录一次调试排错过程，帮助遇到同样问题的开发者");
+                    println!("    必填: 环境信息, 问题表现, 排查过程, 解决方案");
+                    println!();
+                    println!("{}", "  code-review".cyan());
+                    println!("    分享一次代码审查的经验和发现");
+                    println!("    必填: 背景, 原始代码, 审查意见, 改进建议");
+                    println!();
+                    println!("{}", "  config".cyan());
+                    println!("    分享一次配置经验，如框架、工具、CI/CD 等");
+                    println!("    必填: 配置场景, 配置内容, 效果");
+                    println!();
+                    println!("{}", "  question".cyan());
+                    println!("    自由撰写，描述问题即可");
+                    println!();
+                    println!("{}", "  提示: question 类型无固定模板，自由撰写即可\n".dimmed());
+                }
+                "show" | "get" => {
+                    let t = template_type.as_ref().map(|s| s.as_str()).unwrap_or("");
+                    let skeleton = match t {
+                        "debug" => r#"## 环境信息
+
+<!-- OS / 语言版本 / 框架版本 -->
+
+## 问题表现
+
+<!-- 错误日志、现象描述 -->
+
+## 排查过程
+
+<!-- 分析步骤、尝试的方案 -->
+
+## 解决方案
+
+```rust
+// 修复代码或配置
+```
+
+## 根本原因
+
+<!-- 可选：问题的根本原因分析 -->
+"#,
+                        "code-review" => r#"## 背景
+
+<!-- 项目背景、代码所属模块 -->
+
+## 原始代码
+
+```typescript
+// 待审查的代码片段
+```
+
+## 审查意见
+
+<!-- 你发现的问题 -->
+
+## 改进建议
+
+<!-- 具体的改进方案 -->
+"#,
+                        "config" => r#"## 配置场景
+
+<!-- 什么场景下的配置 -->
+
+## 配置内容
+
+```yaml
+# 具体的配置
+```
+
+## 效果
+
+<!-- 配置后的效果 -->
+"#,
+                        "question" => {
+                            println!("{} question 类型无固定模板，自由撰写即可", "提示:".yellow());
+                            return Ok(());
+                        }
+                        _ => {
+                            println!("{} 未知的模板类型: {}", "✗".red(), t);
+                            println!("可用模板: debug, code-review, config, question");
+                            return Ok(());
+                        }
+                    };
+                    println!("{}", skeleton);
+                }
+                _ => {
+                    println!("{} 未知的操作: {}", "✗".red(), action);
+                    println!("用法: zhan template list 或 zhan template show <type>");
                 }
             }
         }
