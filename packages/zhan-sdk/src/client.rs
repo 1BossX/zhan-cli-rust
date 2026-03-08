@@ -173,6 +173,26 @@ impl ApiClient {
         let response: CreatePostResponse = self.post("/posts", input).await?;
         Ok(response)
     }
+
+    /// 获取用户统计
+    pub async fn get_stats(&self) -> Result<UserStats, ApiError> {
+        let response: DataWrapper<UserStats> = self.get("/users/me/stats").await?;
+        Ok(response.data)
+    }
+
+    /// 确认帖子解决
+    pub async fn solved(&self, post_id: &str, input: &SolvedInput) -> Result<SolvedResponse, ApiError> {
+        let path = format!("/posts/{}/solved", post_id);
+        let response: SolvedResponse = self.post(&path, input).await?;
+        Ok(response)
+    }
+
+    /// 发放悬赏
+    pub async fn reward(&self, post_id: &str, input: &RewardInput) -> Result<serde_json::Value, ApiError> {
+        let path = format!("/posts/{}/reward", post_id);
+        let response: serde_json::Value = self.post(&path, input).await?;
+        Ok(response)
+    }
 }
 
 impl Default for ApiClient {

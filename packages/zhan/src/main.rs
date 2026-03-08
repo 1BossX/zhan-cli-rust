@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use owo_colors::OwoColorize;
-use zhan_sdk::{ApiClient, Config, CreatePostInput, DeviceLogin, PostType};
+use zhan_sdk::{ApiClient, Config, CreatePostInput, DeviceLogin, PostType, RewardInput, SolvedInput, UserStats};
 
 #[derive(Parser)]
 #[command(name = "zhan")]
@@ -60,6 +60,28 @@ enum Commands {
         #[arg(long)]
         bounty: Option<i64>,
     },
+    /// 确认帖子帮你解决了问题
+    Solved {
+        /// 帖子 ID
+        post_id: String,
+        /// 悬赏金额 (分)
+        #[arg(long)]
+        bounty: Option<i64>,
+        /// 节省的时间 (分钟)
+        #[arg(long)]
+        time_saved: Option<i64>,
+    },
+    /// 将悬赏发放给指定用户
+    Reward {
+        /// 帖子 ID
+        post_id: String,
+        /// 回答者用户 ID
+        #[arg(long)]
+        to: String,
+    },
+    /// 显示配置文件路径
+    /// 显示个人统计
+    Stats,
     /// 显示配置文件路径
     ConfigPath,
     /// 查看配置
@@ -421,6 +443,125 @@ async fn main() -> Result<()> {
                 }
                 Err(e) => {
                     println!("{} {}", "✗ 发布失败:".red(), e);
+                }
+            }
+        }
+        Commands::Solved { post_id, bounty, time_saved } => {
+            println!("{}", "确认帖子解决...".bold());
+            
+            let config = match Config::load() {
+                Ok(c) => c,
+                Err(_) => {
+                    println!("{}", "✗ 请先登录".red());
+                    return Ok(());
+                }
+            };
+            
+            if !config.is_logged_in() {
+                println!("{}", "✗ 请先运行 `zhan login` 登录".red());
+                return Ok(());
+            }
+            
+            let input = SolvedInput {
+                bounty_cents: bounty,
+                time_saved_minutes: time_saved,
+            };
+            
+            let client = match ApiClient::new() {
+                Ok(c) => c,
+                Err(e) => {
+                    println!("{} {}", "✗ 创建客户端失败:".red(), e);
+                    return Ok(());
+                }
+            };
+            
+            match client.solved(&post_id, &input).await {
+                Ok(result) => {
+                    println!("{}", "✓ 确认成功！".green());
+                    println!("  Solved ID: {}", result.solved_id);
+                    println!("  帖子 {} 的 Solved 数: {}", result.post_id, result.new_solved_count);
+                }
+                Err(e) => {
+                    println!("{} {}", "✗ 确认失败:".red(), e);
+                }
+            }
+        }
+        Commands::Reward { post_id, to } => {
+            println!("{}", "发放悬赏...".bold());
+            
+            let config = match Config::load() {
+                Ok(c) => c,
+                Err(_) => {
+                    println!("{}", "✗ 请先登录".red());
+                    return Ok(());
+                }
+            };
+            
+            if !config.is_logged_in() {
+                println!("{}", "✗ 请先运行 `zhan login` 登录".red());
+                return Ok(());
+            }
+            
+            let input = RewardInput {
+                answerer_user_id: to,
+            };
+            
+            let client = match ApiClient::new() {
+                Ok(c) => c,
+                Err(e) => {
+                    println!("{} {}", "✗ 创建客户端失败:".red(), e);
+                    return Ok(());
+                }
+            };
+            
+            match client.reward(&post_id, &input).await {
+                Ok(result) => {
+                    println!("{}", "✓ 悬赏发放成功！".green());
+                    println!("  {:?}", result);
+                }
+                Err(e) => {
+                    println!("{} {}", "✗ 发放失败:".red(), e);
+                }
+            }
+        }
+        Commands::Stats => {
+            println!("{}", "获取统计数据...".bold());
+            
+            let config = match Config::load() {
+                Ok(c) => c,
+                Err(_) => {
+                    println!("{}", "✗ 请先登录".red());
+                    return Ok(());
+                }
+            };
+            
+            if !config.is_logged_in() {
+                println!("{}", "✗ 请先运行 `zhan login` 登录".red());
+                return Ok(());
+            }
+            
+            let client = match ApiClient::new() {
+                Ok(c) => c,
+                Err(e) => {
+                    println!("{} {}", "✗ 创建客户端失败:".red(), e);
+                    return Ok(());
+                }
+            };
+            
+            match client.get_stats().await {
+                Ok(stats) => {
+                    let level = if stats.avg_cvs >= 0.7 { "High" } else if stats.avg_cvs >= 0.5 { "Medium" } else { "Low" };
+                    let balance_usd = stats.balance_cents as f64 / 100.0;
+                    let coffee_usd = stats.total_coffee_cents as f64 / 100.0;
+                    
+                    println!("\n@{} 的数据", config.username.as_ref().unwrap_or(&"unknown".to_string()));
+                    println!("CVS: {:.2} ({}) | 收益: ${:.2} | 帖子: {} | Solved: {}",
+                        stats.avg_cvs, level, coffee_usd, stats.post_count, stats.total_solved_count);
+                    println!("7日发帖: {} | 声誉: {:.2} | 余额: ${:.2}",
+                        stats.recent_post_count, stats.reputation, balance_usd);
+                }
+                Err(e) => {
+                    println!("{} {}", "✗ 获取统计失败:".red(), e);
                 }
             }
         }

@@ -144,6 +144,51 @@ pub struct CreatePostResponse {
     pub privacy_warnings: Option<Vec<String>>,
 }
 
+/// 用户统计
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct UserStats {
+    #[serde(rename = "postCount")]
+    pub post_count: i64,
+    #[serde(rename = "avgCvs")]
+    pub avg_cvs: f64,
+    #[serde(rename = "totalCoffeeCents")]
+    pub total_coffee_cents: i64,
+    #[serde(rename = "totalSolvedCount")]
+    pub total_solved_count: i64,
+    #[serde(rename = "recentPostCount")]
+    pub recent_post_count: i64,
+    pub reputation: f64,
+    #[serde(rename = "balanceCents")]
+    pub balance_cents: i64,
+}
+
+/// Solved 请求
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SolvedInput {
+    #[serde(rename = "bountyCents")]
+    pub bounty_cents: Option<i64>,
+    #[serde(rename = "timeSavedMinutes")]
+    pub time_saved_minutes: Option<i64>,
+}
+
+/// Solved 响应
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct SolvedResponse {
+    #[serde(rename = "solvedId")]
+    pub solved_id: String,
+    #[serde(rename = "postId")]
+    pub post_id: String,
+    #[serde(rename = "newSolvedCount")]
+    pub new_solved_count: i64,
+}
+
+/// Reward 请求
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RewardInput {
+    #[serde(rename = "answererUserId")]
+    pub answerer_user_id: String,
+}
+
 /// API 通用响应
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiResponse<T> {
