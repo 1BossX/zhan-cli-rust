@@ -4,6 +4,9 @@ on:
   release:
     types: [created]
 
+permissions:
+  contents: write
+
 jobs:
   # 构建并发布二进制文件
   build-release:
@@ -44,12 +47,10 @@ jobs:
           Compress-Archive -Path target/release/zhan.exe -DestinationPath zhan-${{ matrix.target }}.zip
 
       - name: Upload Release Asset
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
-            zhan-*.tar.gz
-            zhan-*.zip
-          # 自动检测 pre-release (以 -alpha, -beta, -rc 结尾的版本)
+            ${{ matrix.target == 'x86_64-pc-windows-gnu' && 'zhan-*.zip' || 'zhan-*.tar.gz' }}
           draft: false
           prerelease: ${{ contains(github.ref_name, '-alpha') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-rc') }}
         env:
