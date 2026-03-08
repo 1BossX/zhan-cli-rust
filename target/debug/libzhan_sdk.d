@@ -1,1 +1,0 @@
-/tmp/zhan-cli-rust/target/debug/libzhan_sdk.rlib: /tmp/zhan-cli-rust/packages/zhan-sdk/src/auth.rs /tmp/zhan-cli-rust/packages/zhan-sdk/src/client.rs /tmp/zhan-cli-rust/packages/zhan-sdk/src/config.rs /tmp/zhan-cli-rust/packages/zhan-sdk/src/lib.rs /tmp/zhan-cli-rust/packages/zhan-sdk/src/types.rs
