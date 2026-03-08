@@ -193,6 +193,17 @@ impl ApiClient {
         let response: serde_json::Value = self.post(&path, input).await?;
         Ok(response)
     }
+
+    /// 请作者喝咖啡
+    pub async fn coffee(&self, post_id: &str, amount: Option<i64>) -> Result<CoffeeResponse, ApiError> {
+        let input = CoffeeInput {
+            post_id: post_id.to_string(),
+            amount_cents: amount,
+            currency: None,
+        };
+        let response: CoffeeResponse = self.post("/payments/coffee", &input).await?;
+        Ok(response)
+    }
 }
 
 impl Default for ApiClient {

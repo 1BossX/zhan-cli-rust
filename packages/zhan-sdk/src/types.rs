@@ -189,6 +189,25 @@ pub struct RewardInput {
     pub answerer_user_id: String,
 }
 
+/// Coffee 输入
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoffeeInput {
+    #[serde(rename = "postId")]
+    pub post_id: String,
+    #[serde(rename = "amountCents")]
+    pub amount_cents: Option<i64>,
+    pub currency: Option<String>,
+}
+
+/// Coffee 响应
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct CoffeeResponse {
+    #[serde(rename = "coffeeId")]
+    pub coffee_id: String,
+    #[serde(rename = "checkoutUrl")]
+    pub checkout_url: String,
+}
+
 /// API 通用响应
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiResponse<T> {

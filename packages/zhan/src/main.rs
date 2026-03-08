@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use owo_colors::OwoColorize;
-use zhan_sdk::{ApiClient, Config, CreatePostInput, DeviceLogin, PostType, RewardInput, SolvedInput, UserStats};
+use zhan_sdk::{ApiClient, Config, CoffeeInput, CreatePostInput, DeviceLogin, PostType, RewardInput, SolvedInput, UserStats};
 
 #[derive(Parser)]
 #[command(name = "zhan")]
@@ -82,6 +82,13 @@ enum Commands {
     /// 显示配置文件路径
     /// 显示个人统计
     Stats,
+    /// 请作者喝咖啡
+    Coffee {
+        /// 帖子 ID
+        post_id: String,
+        /// 金额 (分)
+        amount: Option<i64>,
+    },
     /// 显示配置文件路径
     ConfigPath,
     /// 查看配置
@@ -562,6 +569,42 @@ async fn main() -> Result<()> {
                 }
                 Err(e) => {
                     println!("{} {}", "✗ 获取统计失败:".red(), e);
+                }
+            }
+        }
+        Commands::Coffee { post_id, amount } => {
+            println!("{}", "请作者喝咖啡...".bold());
+            
+            let config = match Config::load() {
+                Ok(c) => c,
+                Err(_) => {
+                    println!("{}", "✗ 请先登录".red());
+                    return Ok(());
+                }
+            };
+            
+            if !config.is_logged_in() {
+                println!("{}", "✗ 请先运行 `zhan login` 登录".red());
+                return Ok(());
+            }
+            
+            let client = match ApiClient::new() {
+                Ok(c) => c,
+                Err(e) => {
+                    println!("{} {}", "✗ 创建客户端失败:".red(), e);
+                    return Ok(());
+                }
+            };
+            
+            match client.coffee(&post_id, amount).await {
+                Ok(result) => {
+                    println!("{}", "✓ 支付会话已创建！".green());
+                    println!("  订单 ID: {}", result.coffee_id);
+                    println!("  支付链接: {}", result.checkout_url);
+                    println!("\n请在浏览器中打开链接完成支付 ☕");
+                }
+                Err(e) => {
+                    println!("{} {}", "✗ 创建支付会话失败:".red(), e);
                 }
             }
         }
