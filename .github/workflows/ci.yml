@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: rustfmt --check Cargo.toml packages/*/Cargo.toml
+      - run: rustfmt --check $(find . -name '*.rs' | grep -v target)
 
   # Clippy 代码检查
   clippy:
