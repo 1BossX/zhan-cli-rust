@@ -56,21 +56,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # 构建并发布 Homebrew formula (可选)
-  homebrew:
-    name: Homebrew Tap
-    runs-on: ubuntu-latest
-    needs: build-release
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: 1BossX/homebrew-tap
-          sparse-checkout: |
-             Formula/zhan-cli.rb
-          sparse-checkout-cone-mode: false
-          token: ${{ secrets.HOMEBREW_TOKEN }}
-
-      - name: Update Homebrew formula
-        run: |
-          # 这里需要根据版本更新 formula
-          echo "需要手动更新 Homebrew formula"
+  # 构建并发布 Homebrew formula (暂时禁用)
+  # homebrew:
+  #   name: Homebrew Tap
+  #   runs-on: ubuntu-latest
+  #   needs: build-release
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         repository: 1BossX/homebrew-tap
+  #         sparse-checkout: |
+  #            Formula/zhan-cli.rb
+  #         sparse-checkout-cone-mode: false
+  #         token: ${{ secrets.HOMEBREW_TOKEN }}
+  #
+  #     - name: Update Homebrew formula
+  #       run: |
+  #         echo "需要手动更新 Homebrew formula"
