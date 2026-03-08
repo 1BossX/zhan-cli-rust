@@ -175,22 +175,28 @@ impl DeviceLogin {
 
     /// 使用 token 直接登录
     pub async fn login_with_token(&self, token: &str) -> Result<LoginResult, LoginError> {
-        let mut config = Config::load().context("加载配置失败")?;
-        config.set_token(token.to_string());
-        config.save().context("保存配置失败")?;
+        let config = Config::load().context("加载配置失败")?;
+        let client = ApiClient::with_config(&config);
 
-        // 验证 token 并获取用户名
-        let client = ApiClient::with_config(&config).with_token(token.to_string());
-        let user_response: serde_json::Value = client
-            .get("/users/me")
+        // 使用新的 token 验证接口
+        let response: serde_json::Value = client
+            .post(
+                "/auth/token/validate",
+                &serde_json::json!({
+                    "token": token
+                }),
+            )
             .await
             .map_err(|e| LoginError::Other(e.to_string()))?;
 
-        let username = user_response["data"]["username"]
+        let username = response["data"]["user"]["username"]
             .as_str()
-            .unwrap_or("unknown")
+            .context("无效的响应")?
             .to_string();
 
+        // 保存 token 到配置
+        let mut config = Config::load().context("加载配置失败")?;
+        config.set_token(token.to_string());
         config.username = Some(username.clone());
         config.save().context("保存配置失败")?;
 
