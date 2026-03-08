@@ -1,0 +1,9 @@
+/home/lance/clawd/zhan-cli-rust/target/release/deps/clap-be77ed555602f40d.d: /home/lance/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clap-4.5.60/src/lib.rs /home/lance/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clap-4.5.60/src/../examples/demo.rs /home/lance/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clap-4.5.60/src/../examples/demo.md
+
+/home/lance/clawd/zhan-cli-rust/target/release/deps/libclap-be77ed555602f40d.rlib: /home/lance/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clap-4.5.60/src/lib.rs /home/lance/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clap-4.5.60/src/../examples/demo.rs /home/lance/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clap-4.5.60/src/../examples/demo.md
+
+/home/lance/clawd/zhan-cli-rust/target/release/deps/libclap-be77ed555602f40d.rmeta: /home/lance/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clap-4.5.60/src/lib.rs /home/lance/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clap-4.5.60/src/../examples/demo.rs /home/lance/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clap-4.5.60/src/../examples/demo.md
+
+/home/lance/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clap-4.5.60/src/lib.rs:
+/home/lance/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clap-4.5.60/src/../examples/demo.rs:
+/home/lance/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/clap-4.5.60/src/../examples/demo.md:

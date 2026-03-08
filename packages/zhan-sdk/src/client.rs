@@ -126,8 +126,8 @@ impl ApiClient {
 
     /// 获取当前用户信息
     pub async fn get_current_user(&self) -> Result<User, ApiError> {
-        let response: ApiResponse<User> = self.get("/users/me").await?;
-        response.data.ok_or(ApiError::ApiError("获取用户信息失败".to_string()))
+        let response: DataWrapper<User> = self.get("/users/me").await?;
+        Ok(response.data)
     }
 
     /// 获取 Feed

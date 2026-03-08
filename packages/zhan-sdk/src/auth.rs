@@ -113,21 +113,28 @@ impl DeviceLogin {
             match result {
                 Ok(response) => {
                     // 成功获取 token
-                    let token = response["access_token"]
+                    // API 返回 {"token": "...", "user": {...}}
+                    let token = response["token"]
                         .as_str()
                         .context("缺少 access_token")?
                         .to_string();
 
-                    // 获取用户信息
-                    let user_response: serde_json::Value = client
-                        .get("/users/me")
-                        .await
-                        .map_err(|e| LoginError::Other(e.to_string()))?;
-
-                    let username = user_response["data"]["username"]
-                        .as_str()
-                        .unwrap_or("unknown")
-                        .to_string();
+                    // 获取用户信息 (从 user 字段或 API)
+                    let username = if let Some(user_obj) = response["user"].as_object() {
+                        user_obj.get("username")
+                            .and_then(|u| u.as_str())
+                            .unwrap_or("unknown")
+                            .to_string()
+                    } else {
+                        let user_response: serde_json::Value = client
+                            .get("/users/me")
+                            .await
+                            .map_err(|e| LoginError::Other(e.to_string()))?;
+                        user_response["data"]["username"]
+                            .as_str()
+                            .unwrap_or("unknown")
+                            .to_string()
+                    };
 
                     // 保存 token 到配置
                     let mut config = Config::load().context("加载配置失败")?;
