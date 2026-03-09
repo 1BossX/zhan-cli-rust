@@ -17,9 +17,24 @@ pub enum ApiError {
     ApiError(String),
     #[error("网络错误: {0}")]
     NetworkError(#[from] reqwest::Error),
+    #[error("响应解析失败: {0}")]
+    ParseError(String),
+    #[error("服务器错误: {0}")]
+    ServerError(String),
+    #[error("请求超时")]
+    Timeout,
+    #[error("无效的 URL: {0}")]
+    InvalidUrl(String),
+}
+
+impl From<serde_json::Error> for ApiError {
+    fn from(e: serde_json::Error) -> Self {
+        ApiError::ParseError(e.to_string())
+    }
 }
 
 /// API 客户端
+#[derive(Debug)]
 pub struct ApiClient {
     client: Client,
     base_url: String,
@@ -53,6 +68,16 @@ impl ApiClient {
     pub fn with_token(mut self, token: String) -> Self {
         self.token = Some(token);
         self
+    }
+
+    /// 获取基础 URL
+    pub fn base_url(&self) -> &str {
+        &self.base_url
+    }
+
+    /// 检查是否有令牌
+    pub fn has_token(&self) -> bool {
+        self.token.is_some()
     }
 
     /// 发送 GET 请求
@@ -232,5 +257,77 @@ impl ApiClient {
 impl Default for ApiClient {
     fn default() -> Self {
         Self::new().expect("Failed to create API client")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_api_error_display() {
+        let err = ApiError::NotAuthenticated;
+        assert_eq!(err.to_string(), "认证失败，请先登录");
+
+        let err = ApiError::RequestFailed("connection refused".to_string());
+        assert_eq!(err.to_string(), "请求失败: connection refused");
+
+        let err = ApiError::ApiError("bad request".to_string());
+        assert_eq!(err.to_string(), "API 返回错误: bad request");
+
+        let err = ApiError::ParseError("invalid json".to_string());
+        assert_eq!(err.to_string(), "响应解析失败: invalid json");
+
+        let err = ApiError::ServerError("internal server error".to_string());
+        assert_eq!(err.to_string(), "服务器错误: internal server error");
+
+        let err = ApiError::Timeout;
+        assert_eq!(err.to_string(), "请求超时");
+
+        let err = ApiError::InvalidUrl("invalid url".to_string());
+        assert_eq!(err.to_string(), "无效的 URL: invalid url");
+    }
+
+    #[test]
+    fn test_api_error_from_json() {
+        let json_err = serde_json::from_str::<serde_json::Value>("invalid").unwrap_err();
+        let api_err: ApiError = json_err.into();
+        assert!(matches!(api_err, ApiError::ParseError(_)));
+    }
+
+    #[test]
+    fn test_api_client_with_token() {
+        let config = Config {
+            token: Some("test_token".to_string()),
+            api_url: "https://api.test.com".to_string(),
+            username: Some("testuser".to_string()),
+        };
+
+        let client = ApiClient::with_config(&config);
+        assert!(client.has_token());
+        assert_eq!(client.base_url(), "https://api.test.com");
+    }
+
+    #[test]
+    fn test_api_client_without_token() {
+        let config = Config::default();
+
+        let client = ApiClient::with_config(&config);
+        assert!(!client.has_token());
+    }
+
+    #[test]
+    fn test_api_client_with_token_method() {
+        let config = Config::default();
+        let client = ApiClient::with_config(&config).with_token("my_token".to_string());
+        assert!(client.has_token());
+    }
+
+    #[test]
+    fn test_api_client_debug() {
+        let config = Config::default();
+        let client = ApiClient::with_config(&config);
+        let debug_str = format!("{:?}", client);
+        assert!(debug_str.contains("ApiClient"));
     }
 }

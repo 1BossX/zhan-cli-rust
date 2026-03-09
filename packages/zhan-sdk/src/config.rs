@@ -36,6 +36,10 @@ pub enum ConfigError {
     ReadError(String),
     #[error("配置文件写入失败: {0}")]
     WriteError(String),
+    #[error("配置路径无效")]
+    InvalidPath,
+    #[error("令牌格式无效")]
+    InvalidToken,
 }
 
 impl From<ConfyError> for ConfigError {
@@ -68,6 +72,9 @@ impl Config {
 
     /// 设置令牌
     pub fn set_token(&mut self, token: String) {
+        if token.is_empty() {
+            return;
+        }
         self.token = Some(token);
     }
 
@@ -81,6 +88,25 @@ impl Config {
     pub fn is_logged_in(&self) -> bool {
         self.token.is_some()
     }
+
+    /// 验证令牌格式
+    pub fn validate_token(&self) -> Result<(), ConfigError> {
+        if let Some(ref token) = self.token {
+            // 简单验证：令牌不应为空且长度应合理
+            if token.is_empty() {
+                return Err(ConfigError::InvalidToken);
+            }
+            if token.len() < 10 {
+                return Err(ConfigError::InvalidToken);
+            }
+        }
+        Ok(())
+    }
+
+    /// 获取 API URL（带协议）
+    pub fn get_api_url(&self) -> &str {
+        &self.api_url
+    }
 }
 
 #[cfg(test)]
@@ -92,5 +118,118 @@ mod tests {
         let config = Config::default();
         assert_eq!(config.api_url, "https://api.zhanjian.space");
         assert!(config.token.is_none());
+        assert!(config.username.is_none());
+        assert!(!config.is_logged_in());
+    }
+
+    #[test]
+    fn test_config_with_token() {
+        let mut config = Config::default();
+        config.set_token("test_token_123".to_string());
+        assert!(config.is_logged_in());
+        assert_eq!(config.token, Some("test_token_123".to_string()));
+    }
+
+    #[test]
+    fn test_clear_token() {
+        let mut config = Config::default();
+        config.set_token("test_token_123".to_string());
+        config.username = Some("testuser".to_string());
+
+        config.clear_token();
+
+        assert!(config.token.is_none());
+        assert!(config.username.is_none());
+        assert!(!config.is_logged_in());
+    }
+
+    #[test]
+    fn test_set_empty_token() {
+        let mut config = Config::default();
+        config.set_token("".to_string());
+        assert!(config.token.is_none());
+    }
+
+    #[test]
+    fn test_validate_token_valid() {
+        let mut config = Config::default();
+        config.set_token("valid_token_12345".to_string());
+        assert!(config.validate_token().is_ok());
+    }
+
+    #[test]
+    fn test_validate_token_empty() {
+        // set_token ignores empty strings, so token remains None
+        let mut config = Config::default();
+        config.set_token("".to_string());
+        // Empty string is ignored, so validation passes (no token to validate)
+        assert!(config.validate_token().is_ok());
+    }
+
+    #[test]
+    fn test_validate_token_too_short() {
+        let mut config = Config::default();
+        config.set_token("short".to_string());
+        assert!(matches!(
+            config.validate_token(),
+            Err(ConfigError::InvalidToken)
+        ));
+    }
+
+    #[test]
+    fn test_validate_token_none() {
+        let config = Config::default();
+        assert!(config.validate_token().is_ok());
+    }
+
+    #[test]
+    fn test_config_error_display() {
+        let err = ConfigError::ReadError("file not found".to_string());
+        assert_eq!(err.to_string(), "配置文件读取失败: file not found");
+
+        let err = ConfigError::WriteError("permission denied".to_string());
+        assert_eq!(err.to_string(), "配置文件写入失败: permission denied");
+
+        let err = ConfigError::InvalidPath;
+        assert_eq!(err.to_string(), "配置路径无效");
+
+        let err = ConfigError::InvalidToken;
+        assert_eq!(err.to_string(), "令牌格式无效");
+    }
+
+    #[test]
+    fn test_get_api_url() {
+        let config = Config::default();
+        assert_eq!(config.get_api_url(), "https://api.zhanjian.space");
+
+        let config = Config {
+            api_url: "https://custom.api.com".to_string(),
+            ..Default::default()
+        };
+        assert_eq!(config.get_api_url(), "https://custom.api.com");
+    }
+
+    #[test]
+    fn test_config_serialization() {
+        let config = Config {
+            token: Some("test_token".to_string()),
+            api_url: "https://api.example.com".to_string(),
+            username: Some("testuser".to_string()),
+        };
+
+        let serialized = serde_json::to_string(&config).unwrap();
+        assert!(serialized.contains("test_token"));
+        assert!(serialized.contains("api.example.com"));
+        assert!(serialized.contains("testuser"));
+
+        let deserialized: Config = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(deserialized.token, Some("test_token".to_string()));
+        assert_eq!(deserialized.api_url, "https://api.example.com");
+        assert_eq!(deserialized.username, Some("testuser".to_string()));
+    }
+
+    #[test]
+    fn test_default_api_url() {
+        assert_eq!(default_api_url(), "https://api.zhanjian.space");
     }
 }

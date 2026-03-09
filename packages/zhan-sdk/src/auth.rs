@@ -101,8 +101,6 @@ impl DeviceLogin {
         while std::time::Instant::now() < deadline {
             tokio::time::sleep(Duration::from_secs(interval_secs)).await;
 
-            eprintln!("[DEBUG] 开始轮询...");
-            eprintln!("[DEBUG] device_code: {}", device_code);
             let result: Result<serde_json::Value, ApiError> = client
                 .post(
                     "/auth/device/poll",
@@ -110,7 +108,6 @@ impl DeviceLogin {
                 )
                 .await;
 
-            eprintln!("[DEBUG] 轮询结果: {:?}", result);
             match result {
                 Ok(response) => {
                     // 成功获取 token
@@ -148,7 +145,6 @@ impl DeviceLogin {
                 }
                 Err(ApiError::ApiError(error_text)) => {
                     // 解析错误
-                    eprintln!("[DEBUG] 检查错误: {}", error_text);
                     if error_text.contains("authorization_pending") {
                         // 继续轮询
                         continue;
@@ -221,4 +217,61 @@ pub struct DeviceCodeResponse {
     #[serde(rename = "expiresIn")]
     pub expires_in: u64,
     pub interval: u64,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_login_result_default() {
+        let result = LoginResult {
+            token: "test_token".to_string(),
+            username: "test_user".to_string(),
+        };
+        assert_eq!(result.token, "test_token");
+        assert_eq!(result.username, "test_user");
+    }
+
+    #[test]
+    fn test_device_code_response_default() {
+        let response = DeviceCodeResponse {
+            device_code: "device_123".to_string(),
+            user_code: "user_456".to_string(),
+            verification_uri: "https://example.com/verify".to_string(),
+            verification_uri_complete: Some("https://example.com/verify/complete".to_string()),
+            expires_in: 300,
+            interval: 5,
+        };
+        assert_eq!(response.device_code, "device_123");
+        assert_eq!(response.user_code, "user_456");
+        assert!(response.verification_uri_complete.is_some());
+        assert_eq!(response.expires_in, 300);
+        assert_eq!(response.interval, 5);
+    }
+
+    #[test]
+    fn test_login_error_display() {
+        let err = LoginError::Timeout;
+        assert_eq!(err.to_string(), "登录超时");
+
+        let err = LoginError::Denied;
+        assert_eq!(err.to_string(), "用户拒绝");
+
+        let err = LoginError::Expired;
+        assert_eq!(err.to_string(), "设备码已过期");
+
+        let err = LoginError::StartFailed("network error".to_string());
+        assert_eq!(err.to_string(), "启动设备登录失败: network error");
+
+        let err = LoginError::Other("unknown error".to_string());
+        assert_eq!(err.to_string(), "登录失败: unknown error");
+    }
+
+    #[test]
+    fn test_login_error_from_anyhow() {
+        let anyhow_err = anyhow::anyhow!("some error");
+        let login_err: LoginError = anyhow_err.into();
+        assert!(matches!(login_err, LoginError::Other(_)));
+    }
 }
