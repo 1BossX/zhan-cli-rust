@@ -15,11 +15,14 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// 通过设备码登录
+    /// 登录账户 (默认: Token 登录)
     Login {
         /// 直接使用 API Token 登录
-        #[arg(long)]
+        #[arg(long, short = 't')]
         token: Option<String>,
+        /// 使用设备码登录
+        #[arg(long, short = 'd', action)]
+        device: bool,
     },
     /// 显示当前登录用户信息
     Whoami,
@@ -112,27 +115,10 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Login { token } => {
-            println!("{}", "设备码登录".bold());
-
-            if let Some(token) = token {
-                println!("使用 Token 登录...");
-                match DeviceLogin::new() {
-                    Ok(login) => match login.login_with_token(&token).await {
-                        Ok(result) => {
-                            println!();
-                            println!("{} 登录成功！", "✓".green());
-                            println!("  欢迎 @{}", result.username.bold());
-                        }
-                        Err(e) => {
-                            println!("{} {}", "✗ 登录失败:".red(), e);
-                        }
-                    },
-                    Err(e) => {
-                        println!("{} {}", "✗ 初始化失败:".red(), e);
-                    }
-                }
-            } else {
+        Commands::Login { token, device } => {
+            // 设备码登录
+            if device {
+                println!("{}", "设备码登录".bold());
                 println!("启动设备码登录...\n");
 
                 match DeviceLogin::new() {
@@ -174,11 +160,54 @@ async fn main() -> Result<()> {
                         println!("{} {}", "✗ 初始化失败:".red(), e);
                     }
                 }
+                return Ok(());
+            }
+
+            // Token 登录 (默认)
+            println!("{}", "Token 登录".bold());
+
+            let token = if let Some(t) = token {
+                t
+            } else {
+                println!();
+                println!("请在以下页面创建 API Token:");
+                println!(
+                    "  {}",
+                    "https://zhanjian.space/settings/devices".cyan().underline()
+                );
+                println!();
+                print!("请输入 API Token: ");
+                std::io::Write::flush(&mut std::io::stdout()).unwrap();
+
+                let mut input = String::new();
+                std::io::stdin().read_line(&mut input).unwrap();
+                input.trim().to_string()
+            };
+
+            if token.is_empty() {
+                println!("{}", "Token 不能为空".red());
+                return Ok(());
+            }
+
+            println!("正在验证 Token...");
+            match DeviceLogin::new() {
+                Ok(login) => match login.login_with_token(&token).await {
+                    Ok(result) => {
+                        println!();
+                        println!("{} 登录成功！", "✓".green());
+                        println!("  欢迎 @{}", result.username.bold());
+                    }
+                    Err(e) => {
+                        println!("{} {}", "✗ 登录失败:".red(), e);
+                    }
+                },
+                Err(e) => {
+                    println!("{} {}", "✗ 初始化失败:".red(), e);
+                }
             }
         }
-        Commands::Whoami => {
-            println!("{}", "获取用户信息...".bold());
 
+        Commands::Whoami => {
             let config = match Config::load() {
                 Ok(c) => c,
                 Err(_) => {

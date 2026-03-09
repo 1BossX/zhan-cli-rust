@@ -174,18 +174,13 @@ impl DeviceLogin {
         let config = Config::load().context("加载配置失败")?;
         let client = ApiClient::with_config(&config);
 
-        // 使用新的 token 验证接口
+        // 使用 /users/me 接口验证 token
         let response: serde_json::Value = client
-            .post(
-                "/auth/token/validate",
-                &serde_json::json!({
-                    "token": token
-                }),
-            )
+            .get("/users/me")
             .await
             .map_err(|e| LoginError::Other(e.to_string()))?;
 
-        let username = response["data"]["user"]["username"]
+        let username = response["data"]["username"]
             .as_str()
             .context("无效的响应")?
             .to_string();
