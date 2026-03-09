@@ -27,9 +27,15 @@ jobs:
     strategy:
       matrix:
         include:
+          # macOS Apple Silicon (aarch64)
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            ext: tar.gz
+          # macOS Intel (x86_64)
           - os: macos-latest
             target: x86_64-apple-darwin
             ext: tar.gz
+          # Linux x86_64
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             ext: tar.gz
@@ -69,7 +75,7 @@ jobs:
           VERSION="${{ github.event.release.tag_name }}"
           mkdir -p ./packages
 
-          for target in x86_64-apple-darwin x86_64-unknown-linux-gnu; do
+          for target in aarch64-apple-darwin x86_64-apple-darwin x86_64-unknown-linux-gnu; do
             if [ -f "./binaries/zhan-${target}/zhan" ]; then
               chmod +x "./binaries/zhan-${target}/zhan"
               tar -czf "./packages/zhan-${VERSION}-${target}.tar.gz" -C "./binaries/zhan-${target}" zhan
