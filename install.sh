@@ -6,7 +6,15 @@ set -e
 
 REPO="1BossX/zhan-cli-rust"
 BINARY_NAME="zhan"
-INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+
+# 默认安装到用户目录，避免权限问题
+if [ -z "$INSTALL_DIR" ]; then
+    if [ -w "/usr/local/bin" ]; then
+        INSTALL_DIR="/usr/local/bin"
+    else
+        INSTALL_DIR="$HOME/.local/bin"
+    fi
+fi
 
 # Colors
 RED='\033[0;31m'
@@ -136,6 +144,15 @@ main() {
     echo ""
     echo "${GREEN}✅ Installation complete!${NC}"
     echo ""
+
+    # 提示安装目录
+    if [ "$INSTALL_DIR" = "$HOME/.local/bin" ]; then
+        echo "📁 Installed to: ${YELLOW}$INSTALL_DIR${NC}"
+        echo "   Add to PATH if needed:"
+        echo "   ${YELLOW}export PATH=\$PATH:\$HOME/.local/bin${NC}"
+        echo ""
+    fi
+
     echo "Run '${BINARY_NAME}' to get started:"
     echo "  ${YELLOW}${BINARY_NAME} login${NC}        # 登录"
     echo "  ${YELLOW}${BINARY_NAME} whoami${NC}       # 查看当前用户"
