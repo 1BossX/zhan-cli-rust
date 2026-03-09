@@ -172,7 +172,7 @@ impl DeviceLogin {
     /// 使用 token 直接登录
     pub async fn login_with_token(&self, token: &str) -> Result<LoginResult, LoginError> {
         let config = Config::load().context("加载配置失败")?;
-        let client = ApiClient::with_config(&config);
+        let client = ApiClient::with_config(&config).with_token(token.to_string());
 
         // 使用 /users/me 接口验证 token
         let response: serde_json::Value = client
