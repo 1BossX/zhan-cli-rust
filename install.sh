@@ -148,8 +148,29 @@ main() {
     # 提示安装目录
     if [ "$INSTALL_DIR" = "$HOME/.local/bin" ]; then
         echo "📁 Installed to: ${YELLOW}$INSTALL_DIR${NC}"
-        echo "   Add to PATH if needed:"
-        echo "   ${YELLOW}export PATH=\$PATH:\$HOME/.local/bin${NC}"
+
+        # 检测 shell 配置文件
+        SHELL_RC=""
+        if [ -f "$HOME/.zshrc" ]; then
+            SHELL_RC="$HOME/.zshrc"
+        elif [ -f "$HOME/.bashrc" ]; then
+            SHELL_RC="$HOME/.bashrc"
+        elif [ -f "$HOME/.profile" ]; then
+            SHELL_RC="$HOME/.profile"
+        fi
+
+        # 检查是否已添加 PATH
+        if [ -n "$SHELL_RC" ] && ! grep -q ".local/bin" "$SHELL_RC" 2>/dev/null; then
+            echo "Adding to PATH in $SHELL_RC..."
+            echo 'export PATH="$PATH:$HOME/.local/bin"' >> "$SHELL_RC"
+            echo "${GREEN}✅ Added to PATH!${NC}"
+            echo ""
+            echo "Please restart your terminal or run:"
+            echo "  ${YELLOW}source $SHELL_RC${NC}"
+        else
+            echo "Run to add to PATH:"
+            echo "  ${YELLOW}export PATH=\$PATH:\$HOME/.local/bin${NC}"
+        fi
         echo ""
     fi
 
